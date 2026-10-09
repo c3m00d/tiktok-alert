@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Süper Hayran Uyarısı — Gerçekçi Yıldırım & Bütünleşik Taç</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@800;900&family=Montserrat:wght@900&display=swap');
+
+:root { 
+  --cyan-lightning: #00f0ff;
+  --gold-accent: #ffd700;
+}
+
+* { box-sizing: border-box; }
+
+/* OBS / STREAMLABS İÇİN %100 ŞEFFAF ARKA PLAN */
+html, body {
+  margin: 0; width: 100%; height: 100%;
+  overflow: hidden; 
+  background: transparent !important; 
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+}
+
+#stage {
+  position: relative; width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent !important;
+}
+
+/* YILDIRIM IŞIĞI FLAŞI */
+#lightning-flash {
+  position: fixed; inset: 0;
+  background: rgba(220, 250, 255, 0.95);
+  opacity: 0; pointer-events: none; z-index: 50;
+}
+
+/* CANVAS YILDIRIM VE PARÇACIKLAR */
+#fx-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 20;
+}
+
+/* ARKA PLAN DİNAMİK AURA */
+.dark-aura {
+  position: absolute;
+  width: 650px; height: 650px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.5) 0%, rgba(5, 12, 28, 0.8) 50%, rgba(0,0,0,0) 75%);
+  filter: blur(60px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ANA KART KONTEYNERİ */
+.alert-box {
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 5;
+  opacity: 0;
+}
+
+/* GÖNDERDİĞİN ÖZEL TAÇ (RESİM DOĞRUDAN KODUN İÇİNE GÖMÜLDÜ) */
+.crown-wrap {
+  position: absolute;
+  top: -145px; z-index: 10;
+  width: 230px; height: 230px;
+  opacity: 0;
+  transform: translateY(-220px) rotate(-10deg) scale(1.4);
+  filter: drop-shadow(0 0 35px var(--cyan-lightning)) drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+}
+
+.crown-wrap img {
+  width: 100%; height: 100%; object-fit: contain;
+  border-radius: 50%;
+  mix-blend-mode: screen; /* Siyah arka planı yok eder */
+}
+
+/* DEVASA PROFİL RESMİ */
+.avatar-wrap {
+  position: relative;
+  width: 210px; height: 210px;
+  border-radius: 50%; padding: 6px;
+  background: linear-gradient(135deg, #00f0ff, #081226, #ffd700);
+  box-shadow: 0 0 45px rgba(0, 240, 255, 0.7), 0 25px 60px rgba(0,0,0,0.95);
+  z-index: 2; margin-bottom: -45px;
+}
+
+.avatar-img {
+  width: 100%; height: 100%;
+  border-radius: 50%; object-fit: cover;
+  background: #000;
+  border: 5px solid #00f0ff;
+}
+
+/* KOYU CAM KART */
+.user-card {
+  position: relative; z-index: 1;
+  background: rgba(6, 12, 25, 0.94);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 2px solid rgba(0, 240, 255, 0.6);
+  border-bottom: 4px solid var(--cyan-lightning);
+  border-radius: 36px;
+  padding: 65px 65px 35px 65px;
+  text-align: center;
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.95), inset 0 0 30px rgba(0, 240, 255, 0.2);
+  max-width: 850px; width: 90vw;
+}
+
+/* DEVASA KULLANICI ADI */
+.username {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 68px;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 
+    0 0 20px rgba(0, 240, 255, 0.9),
+    0 4px 15px rgba(0,0,0,0.9);
+  margin: 0 0 20px 0;
+  line-height: 1;
+}
+
+/* ÖZEL MAHALLE METNİ */
+.custom-message {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 26px; line-height: 1.4;
+  color: #00f0ff;
+  text-transform: uppercase;
+  background: rgba(0, 240, 255, 0.08);
+  border: 2px solid rgba(0, 240, 255, 0.4);
+  padding: 18px 28px; border-radius: 20px;
+  text-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.7);
+  letter-spacing: 0.5px;
+}
+
+/* KONTROL PANELİ */
+#controls {
+  position: fixed; left: 16px; bottom: 16px; z-index: 99;
+  display: flex; gap: 8px; background: rgba(0,0,0,0.92);
+  padding: 10px; border-radius: 10px; border: 1px solid #333;
+  font-family: sans-serif;
+}
+#controls input { background: #111; color: #fff; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; }
+#controls button { background: var(--cyan-lightning); border: 0; padding: 8px 18px; font-weight: bold; cursor: pointer; border-radius: 6px; color: #000; }
+body.clean #controls { display: none; }
+
+/* ANİMASYON ZAMANLAMASI */
+#stage.animating .dark-aura { animation: auraFlash 5.5s ease forwards; }
+#stage.animating .alert-box { animation: cardSlam 5.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+#stage.animating .crown-wrap { animation: crownSlam 5.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* EKRAN SALLANMASI (DEPREM) */
+#stage.shake {
+  animation: earthquake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+#lightning-flash.strike {
+  animation: flashTrigger 0.35s ease-out forwards;
+}
+
+@keyframes flashTrigger {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  30% { opacity: 0.3; }
+  45% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+@keyframes earthquake {
+  10%, 90% { transform: translate3d(-6px, 3px, 0) rotate(-1.5deg); }
+  20%, 80% { transform: translate3d(8px, -5px, 0) rotate(2deg); }
+  30%, 50%, 70% { transform: translate3d(-10px, 8px, 0) rotate(-2.5deg); }
+  40%, 60% { transform: translate3d(10px, -8px, 0) rotate(2.5deg); }
+}
+
+@keyframes auraFlash {
+  0% { opacity: 0; transform: scale(0.3); }
+  20%, 80% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+@keyframes cardSlam {
+  0% { opacity: 0; transform: scale(0.7) translateY(120px); }
+  14% { opacity: 1; transform: scale(1) translateY(0); }
+  18%, 85% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.9) translateY(-40px); }
+}
+
+@keyframes crownSlam {
+  0%, 10% { opacity: 0; transform: translateY(-240px) rotate(-25deg) scale(2); }
+  22% { opacity: 1; transform: translateY(0) rotate(-4deg) scale(1); }
+  26% { transform: translateY(-10px) rotate(-1deg) scale(1.08); }
+  30%, 85% { opacity: 1; transform: translateY(0) rotate(-2deg) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.85); }
+}
+</style>
+</head>
+<body>
+
+<div id="lightning-flash"></div>
+
+<div id="stage">
+  <canvas id="fx-canvas"></canvas>
+  <div class="dark-aura"></div>
+  
+  <div class="alert-box">
+    <!-- TAÇ RESMİ DOĞRUDAN SVG KODU OLARAK ENTEGRE EDİLDİ (ENGEL TILSIMI YOK) -->
+    <div class="crown-wrap">
+      <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="gemGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="40%" stop-color="#00f0ff"/>
+            <stop offset="100%" stop-color="#0044ff"/>
+          </radialGradient>
+          <linearGradient id="darkGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFE57F"/>
+            <stop offset="35%" stop-color="#D4AF37"/>
+            <stop offset="70%" stop-color="#AA7C11"/>
+            <stop offset="100%" stop-color="#3A2800"/>
+          </linearGradient>
+          <filter id="auraEffect" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="10" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Turkuaz Enerji Aurası -->
+        <circle cx="250" cy="250" r="180" fill="#00f0ff" opacity="0.3" filter="url(#auraEffect)"/>
+
+        <!-- Taç Gövdesi -->
+        <path d="M 70,180 L 150,250 L 250,90 L 350,250 L 430,180 L 390,380 L 110,380 Z" fill="url(#darkGold)" stroke="#FFF" stroke-width="4" filter="url(#auraEffect)"/>
+        <path d="M 110,380 C 180,410 320,410 390,380 L 380,340 C 310,365 190,365 120,340 Z" fill="#1A1000"/>
+        
+        <!-- Ön Süsleme Kıvrımları -->
+        <path d="M 150,250 L 250,170 L 350,250 L 300,340 Q 250,360 200,340 Z" fill="url(#darkGold)" stroke="#FFF" stroke-width="2"/>
+
+        <!-- Parlayan Dev Turkuaz Mücevher -->
+        <polygon points="250,160 290,230 250,300 210,230" fill="url(#gemGlow)" stroke="#FFF" stroke-width="4" filter="url(#auraEffect)"/>
+        <circle cx="250" cy="90" r="18" fill="url(#gemGlow)" stroke="#FFF" stroke-width="3" filter="url(#auraEffect)"/>
+        <circle cx="70" cy="180" r="14" fill="url(#gemGlow)" stroke="#FFF" stroke-width="3" filter="url(#auraEffect)"/>
+        <circle cx="430" cy="180" r="14" fill="url(#gemGlow)" stroke="#FFF" stroke-width="3" filter="url(#auraEffect)"/>
+      </svg>
+    </div>
+
+    <!-- PROFİL RESMİ -->
+    <div class="avatar-wrap">
+      <img id="userAvatar" class="avatar-img" src="https://i.pravatar.cc/200?img=68" alt="Profil">
+    </div>
+
+    <!-- KART -->
+    <div class="user-card">
+      <div class="username" id="fanName">@kullaniciadi</div>
+      <div class="custom-message">
+        KINGOM ARTIK BİZİM MAHELLEDEN, BİZİMLE BATMAYA KARAR VERDİ! 🔥⚡
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <input id="nameInput" value="@kullaniciadi" placeholder="Kullanıcı adı">
+  <button id="play">ŞOVU BAŞLAT</button>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+const nameInput = document.getElementById('nameInput');
+const fanName = document.getElementById('fanName');
+const flash = document.getElementById('lightning-flash');
+const canvas = document.getElementById('fx-canvas');
+const ctx = canvas.getContext('2d');
+
+let particles = [];
+let lightningPaths = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ÇOK DALLI REALİSTİK YILDIRIM ALGORİTMASI
+function createFractalLightning(startX, startY, endX, endY, displacement, branchChance) {
+  if (displacement < 3) {
+    lightningPaths.push({
+      x1: startX, y1: startY, x2: endX, y2: endY
+    });
+    return;
+  }
+
+  const midX = (startX + endX) / 2 + (Math.random() - 0.5) * displacement;
+  const midY = (startY + endY) / 2 + (Math.random() - 0.5) * displacement;
+
+  createFractalLightning(startX, startY, midX, midY, displacement / 2, branchChance);
+  createFractalLightning(midX, midY, endX, endY, displacement / 2, branchChance);
+
+  // Yan Yıldırım Dalları
+  if (Math.random() < branchChance) {
+    const branchAngle = (Math.random() - 0.5) * Math.PI / 2;
+    const branchLength = displacement * 2.5;
+    const branchEndX = midX + Math.cos(branchAngle) * branchLength;
+    const branchEndY = midY + Math.sin(branchAngle) * branchLength;
+    createFractalLightning(midX, midY, branchEndX, branchEndY, displacement / 2, branchChance / 2);
+  }
+}
+
+function drawLightning() {
+  ctx.save();
+  ctx.shadowBlur = 25;
+  ctx.shadowColor = '#00f0ff';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 4;
+
+  lightningPaths.forEach(path => {
+    ctx.beginPath();
+    ctx.moveTo(path.x1, path.y1);
+    ctx.lineTo(path.x2, path.y2);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function triggerThunder() {
+  // 1. Ekran Sarsıntısı
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+
+  // 2. Işık Flaşı
+  flash.classList.remove('strike');
+  void flash.offsetWidth;
+  flash.classList.add('strike');
+
+  // 3. Çoklu Yıldırım
+  lightningPaths = [];
+  const targetX = window.innerWidth / 2;
+  const targetY = window.innerHeight / 2 - 120;
+  
+  createFractalLightning(targetX - 180, 0, targetX, targetY, 90, 0.4);
+  createFractalLightning(targetX + 180, 0, targetX, targetY, 90, 0.4);
+  
+  drawLightning();
+  setTimeout(() => { lightningPaths = []; }, 180);
+
+  // 4. Parçacık Yağmuru
+  createSparks();
+  renderParticles();
+}
+
+function createSparks() {
+  particles = [];
+  const colors = ['#00f0ff', '#ffd700', '#ffffff', '#0044ff'];
+  for (let i = 0; i < 200; i++) {
+    particles.push({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2 - 100,
+      vx: (Math.random() - 0.5) * 36,
+      vy: (Math.random() - 0.75) * 36,
+      size: Math.random() * 8 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1,
+      gravity: 0.26
+    });
+  }
+}
+
+function renderParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (lightningPaths.length > 0) drawLightning();
+
+  particles.forEach((p, index) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += p.gravity;
+    p.alpha -= 0.015;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.alpha);
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = p.color;
+    
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    if (p.alpha <= 0) particles.splice(index, 1);
+  });
+
+  if (particles.length > 0 || lightningPaths.length > 0) {
+    requestAnimationFrame(renderParticles);
+  }
+}
+
+function play() {
+  fanName.textContent = nameInput.value.trim() || '@kullaniciadi';
+
+  stage.classList.remove('animating');
+  void stage.offsetWidth; // Reflow
+  stage.classList.add('animating');
+
+  // Taç oturduğu an (1.1 saniye sonra)
+  setTimeout(() => {
+    triggerThunder();
+  }, 1100);
+}
+
+document.getElementById('play').addEventListener('click', play);
+
+// StreamElements / Streamlabs Dinleyicisi
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj.detail || !obj.detail.event) return;
+  const event = obj.detail.event;
+  if (event.name) {
+    fanName.textContent = '@' + event.name;
+    if (event.avatar) {
+      document.getElementById('userAvatar').src = event.avatar;
+    }
+    play();
+  }
+});
+
+// H Tuşu ile Paneli Gizle
+window.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'h') document.body.classList.toggle('clean');
+});
+</script>
+
+</body>
+</html>
