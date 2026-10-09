@@ -14,7 +14,7 @@
 
 * { box-sizing: border-box; }
 
-/* OBS / STREAMLABS İÇİN %100 ŞEFFAF ARKA PLAN */
+/* OBS / STREAMLABS / LIVE STUDIO İÇİN %100 ŞEFFAF ARKA PLAN */
 html, body {
   margin: 0; width: 100%; height: 100%;
   overflow: hidden; 
@@ -63,7 +63,7 @@ html, body {
   opacity: 0;
 }
 
-/* GÖNDERDİĞİN ÖZEL TAÇ (RESİM DOĞRUDAN KODUN İÇİNE GÖMÜLDÜ) */
+/* TAÇ WRAPPER */
 .crown-wrap {
   position: absolute;
   top: -145px; z-index: 10;
@@ -76,7 +76,7 @@ html, body {
 .crown-wrap img {
   width: 100%; height: 100%; object-fit: contain;
   border-radius: 50%;
-  mix-blend-mode: screen; /* Siyah arka planı yok eder */
+  mix-blend-mode: screen;
 }
 
 /* DEVASA PROFİL RESMİ */
@@ -157,7 +157,6 @@ body.clean #controls { display: none; }
 #stage.animating .alert-box { animation: cardSlam 5.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 #stage.animating .crown-wrap { animation: crownSlam 5.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-/* EKRAN SALLANMASI (DEPREM) */
 #stage.shake {
   animation: earthquake 0.45s cubic-bezier(.36,.07,.19,.97) both;
 }
@@ -202,8 +201,12 @@ body.clean #controls { display: none; }
   100% { opacity: 0; transform: translateY(-40px) scale(0.85); }
 }
 </style>
+
+<!-- TIKTOK LIVE CANLI BAĞLANTI KÜTÜPHANELERİ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tiktok-live-connector-web@latest/dist/tiktok-live-connector-web.min.js"></script>
 </head>
-<body>
+<body class="clean"> <!-- Paneli varsayılan olarak gizledik -->
 
 <div id="lightning-flash"></div>
 
@@ -212,7 +215,6 @@ body.clean #controls { display: none; }
   <div class="dark-aura"></div>
   
   <div class="alert-box">
-    <!-- TAÇ RESMİ DOĞRUDAN SVG KODU OLARAK ENTEGRE EDİLDİ (ENGEL TILSIMI YOK) -->
     <div class="crown-wrap">
       <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -236,17 +238,10 @@ body.clean #controls { display: none; }
           </filter>
         </defs>
 
-        <!-- Turkuaz Enerji Aurası -->
         <circle cx="250" cy="250" r="180" fill="#00f0ff" opacity="0.3" filter="url(#auraEffect)"/>
-
-        <!-- Taç Gövdesi -->
         <path d="M 70,180 L 150,250 L 250,90 L 350,250 L 430,180 L 390,380 L 110,380 Z" fill="url(#darkGold)" stroke="#FFF" stroke-width="4" filter="url(#auraEffect)"/>
         <path d="M 110,380 C 180,410 320,410 390,380 L 380,340 C 310,365 190,365 120,340 Z" fill="#1A1000"/>
-        
-        <!-- Ön Süsleme Kıvrımları -->
         <path d="M 150,250 L 250,170 L 350,250 L 300,340 Q 250,360 200,340 Z" fill="url(#darkGold)" stroke="#FFF" stroke-width="2"/>
-
-        <!-- Parlayan Dev Turkuaz Mücevher -->
         <polygon points="250,160 290,230 250,300 210,230" fill="url(#gemGlow)" stroke="#FFF" stroke-width="4" filter="url(#auraEffect)"/>
         <circle cx="250" cy="90" r="18" fill="url(#gemGlow)" stroke="#FFF" stroke-width="3" filter="url(#auraEffect)"/>
         <circle cx="70" cy="180" r="14" fill="url(#gemGlow)" stroke="#FFF" stroke-width="3" filter="url(#auraEffect)"/>
@@ -254,12 +249,10 @@ body.clean #controls { display: none; }
       </svg>
     </div>
 
-    <!-- PROFİL RESMİ -->
     <div class="avatar-wrap">
       <img id="userAvatar" class="avatar-img" src="https://i.pravatar.cc/200?img=68" alt="Profil">
     </div>
 
-    <!-- KART -->
     <div class="user-card">
       <div class="username" id="fanName">@kullaniciadi</div>
       <div class="custom-message">
@@ -292,12 +285,9 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// ÇOK DALLI REALİSTİK YILDIRIM ALGORİTMASI
 function createFractalLightning(startX, startY, endX, endY, displacement, branchChance) {
   if (displacement < 3) {
-    lightningPaths.push({
-      x1: startX, y1: startY, x2: endX, y2: endY
-    });
+    lightningPaths.push({ x1: startX, y1: startY, x2: endX, y2: endY });
     return;
   }
 
@@ -307,7 +297,6 @@ function createFractalLightning(startX, startY, endX, endY, displacement, branch
   createFractalLightning(startX, startY, midX, midY, displacement / 2, branchChance);
   createFractalLightning(midX, midY, endX, endY, displacement / 2, branchChance);
 
-  // Yan Yıldırım Dalları
   if (Math.random() < branchChance) {
     const branchAngle = (Math.random() - 0.5) * Math.PI / 2;
     const branchLength = displacement * 2.5;
@@ -334,17 +323,14 @@ function drawLightning() {
 }
 
 function triggerThunder() {
-  // 1. Ekran Sarsıntısı
   stage.classList.remove('shake');
   void stage.offsetWidth;
   stage.classList.add('shake');
 
-  // 2. Işık Flaşı
   flash.classList.remove('strike');
   void flash.offsetWidth;
   flash.classList.add('strike');
 
-  // 3. Çoklu Yıldırım
   lightningPaths = [];
   const targetX = window.innerWidth / 2;
   const targetY = window.innerHeight / 2 - 120;
@@ -355,7 +341,6 @@ function triggerThunder() {
   drawLightning();
   setTimeout(() => { lightningPaths = []; }, 180);
 
-  // 4. Parçacık Yağmuru
   createSparks();
   renderParticles();
 }
@@ -406,38 +391,52 @@ function renderParticles() {
   }
 }
 
-function play() {
-  fanName.textContent = nameInput.value.trim() || '@kullaniciadi';
+function triggerAlert(username, avatarUrl) {
+  if (username) fanName.textContent = '@' + username.replace('@', '');
+  if (avatarUrl) document.getElementById('userAvatar').src = avatarUrl;
 
   stage.classList.remove('animating');
-  void stage.offsetWidth; // Reflow
+  void stage.offsetWidth;
   stage.classList.add('animating');
 
-  // Taç oturduğu an (1.1 saniye sonra)
   setTimeout(() => {
     triggerThunder();
   }, 1100);
 }
 
-document.getElementById('play').addEventListener('click', play);
-
-// StreamElements / Streamlabs Dinleyicisi
-window.addEventListener('onEventReceived', function (obj) {
-  if (!obj.detail || !obj.detail.event) return;
-  const event = obj.detail.event;
-  if (event.name) {
-    fanName.textContent = '@' + event.name;
-    if (event.avatar) {
-      document.getElementById('userAvatar').src = event.avatar;
-    }
-    play();
-  }
+document.getElementById('play').addEventListener('click', () => {
+  triggerAlert(nameInput.value.trim());
 });
 
-// H Tuşu ile Paneli Gizle
 window.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h') document.body.classList.toggle('clean');
 });
+
+// ==========================================
+// TIKTOK OTOMATİK CANLI YAYIN DİNLEYİCİSİ
+// ==========================================
+// BURAYA KENDİ TIKTOK KULLANICI ADINI YAZ (Baştaki @ olmadan):
+const TIKTOK_USERNAME = "c3m00d"; 
+
+if (typeof TikTokLiveConnector !== 'undefined') {
+  const tiktokConnection = new TikTokLiveConnector(TIKTOK_USERNAME);
+
+  tiktokConnection.connect().then(state => {
+    console.log(`TikTok Canlı Yayın Bağlantısı Başarılı! Room ID: ${state.roomId}`);
+  }).catch(err => {
+    console.warn('TikTok Canlı Bağlantı Bekleniyor/Hata:', err);
+  });
+
+  // 1. Süper Hayran / Abonelik Olayı
+  tiktokConnection.on('subscribe', (data) => {
+    triggerAlert(data.uniqueId, data.profilePictureUrl);
+  });
+
+  // 2. Takip Etme Olayı (İsteğe Bağlı Test İçin)
+  tiktokConnection.on('follow', (data) => {
+    triggerAlert(data.uniqueId, data.profilePictureUrl);
+  });
+}
 </script>
 
 </body>
