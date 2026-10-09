@@ -201,12 +201,8 @@ body.clean #controls { display: none; }
   100% { opacity: 0; transform: translateY(-40px) scale(0.85); }
 }
 </style>
-
-<!-- TIKTOK LIVE CANLI BAĞLANTI KÜTÜPHANELERİ -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tiktok-live-connector-web@latest/dist/tiktok-live-connector-web.min.js"></script>
 </head>
-<body class="clean"> <!-- Paneli varsayılan olarak gizledik -->
+<body>
 
 <div id="lightning-flash"></div>
 
@@ -408,35 +404,19 @@ document.getElementById('play').addEventListener('click', () => {
   triggerAlert(nameInput.value.trim());
 });
 
+// StreamElements / Streamlabs Dinleyicisi
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj.detail || !obj.detail.event) return;
+  const event = obj.detail.event;
+  if (event.name) {
+    triggerAlert(event.name, event.avatar);
+  }
+});
+
+// H Tuşu ile Paneli Gizle / Göster
 window.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h') document.body.classList.toggle('clean');
 });
-
-// ==========================================
-// TIKTOK OTOMATİK CANLI YAYIN DİNLEYİCİSİ
-// ==========================================
-// BURAYA KENDİ TIKTOK KULLANICI ADINI YAZ (Baştaki @ olmadan):
-const TIKTOK_USERNAME = "c3m00d"; 
-
-if (typeof TikTokLiveConnector !== 'undefined') {
-  const tiktokConnection = new TikTokLiveConnector(TIKTOK_USERNAME);
-
-  tiktokConnection.connect().then(state => {
-    console.log(`TikTok Canlı Yayın Bağlantısı Başarılı! Room ID: ${state.roomId}`);
-  }).catch(err => {
-    console.warn('TikTok Canlı Bağlantı Bekleniyor/Hata:', err);
-  });
-
-  // 1. Süper Hayran / Abonelik Olayı
-  tiktokConnection.on('subscribe', (data) => {
-    triggerAlert(data.uniqueId, data.profilePictureUrl);
-  });
-
-  // 2. Takip Etme Olayı (İsteğe Bağlı Test İçin)
-  tiktokConnection.on('follow', (data) => {
-    triggerAlert(data.uniqueId, data.profilePictureUrl);
-  });
-}
 </script>
 
 </body>
